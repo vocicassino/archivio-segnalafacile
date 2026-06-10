@@ -5,33 +5,208 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#0b1220" />
   <title>Archivio Segnala Facile</title>
-  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="manifest" href="manifest.webmanifest?v=3" />
   <link rel="icon" href="icons/icon-192.png" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root{--bg:#0b1220;--bg2:#070c18;--card:#111d35;--text:#eaf0ff;--muted:#a9b6db;--accent:#2d7dff;--green:#19c37d;--danger:#ff4d4f;--stroke:rgba(255,255,255,.12);--shadow:0 18px 45px rgba(0,0,0,.40)}
-    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--text);background:radial-gradient(900px 550px at 20% -10%,rgba(45,125,255,.25),transparent 60%),radial-gradient(850px 500px at 90% 0%,rgba(25,195,125,.18),transparent 58%),linear-gradient(180deg,var(--bg),var(--bg2));min-height:100vh}.wrap{max-width:1180px;margin:0 auto;padding:22px 16px 60px}header{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}.brand{display:flex;align-items:center;gap:12px}.logo{width:58px;height:58px;border-radius:18px;background:linear-gradient(135deg,#2d7dff,#19c37d);display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:var(--shadow)}h1{margin:0;font-size:30px;line-height:1.05}.sub{color:var(--muted);font-size:14px;margin-top:4px}a.btn,button{border:0;border-radius:16px;padding:11px 14px;font-weight:900;color:white;background:var(--accent);text-decoration:none;cursor:pointer;display:inline-flex;gap:8px;align-items:center;justify-content:center}.ghost{background:rgba(255,255,255,.07)!important;border:1px solid var(--stroke)!important}.card{background:linear-gradient(145deg,rgba(22,36,64,.92),rgba(8,14,28,.92));border:1px solid var(--stroke);border-radius:24px;padding:18px;box-shadow:var(--shadow);margin-bottom:18px}.filters{display:grid;grid-template-columns:1fr 180px 180px;gap:10px}input,select{width:100%;padding:12px;border-radius:14px;border:1px solid var(--stroke);background:rgba(0,0,0,.25);color:var(--text);outline:none}select option{background:#0b1220;color:white}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}.item{background:rgba(0,0,0,.22);border:1px solid var(--stroke);border-radius:22px;overflow:hidden;box-shadow:0 12px 28px rgba(0,0,0,.25)}.item img{width:100%;height:210px;object-fit:cover;display:block;background:#050912;cursor:pointer}.body{padding:14px}.badge{display:inline-flex;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);font-size:12px;font-weight:900;color:#dce7ff;margin-bottom:8px}.title{font-size:17px;font-weight:980;margin:0 0 6px}.desc{font-size:13px;color:var(--muted);line-height:1.45;white-space:pre-wrap;margin:0 0 10px}.meta{font-size:12px;color:#8fa0ca;margin-bottom:10px}.row{display:flex;gap:8px;flex-wrap:wrap}.empty{text-align:center;color:var(--muted);padding:40px 10px}.viewer{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99;display:none;align-items:center;justify-content:center;padding:16px;flex-direction:column;gap:12px}.viewer img{max-width:96vw;max-height:82vh;border-radius:18px;object-fit:contain}.viewer button{align-self:flex-end;background:rgba(255,255,255,.12)}@media(max-width:760px){.filters{grid-template-columns:1fr}h1{font-size:25px}}
+    :root {
+      --bg:#0b1220; --bg2:#070c18; --card:#111d35; --text:#eaf0ff; --muted:#a9b6db;
+      --accent:#2d7dff; --green:#19c37d; --danger:#ff4d4f; --stroke:rgba(255,255,255,.12);
+      --shadow:0 18px 45px rgba(0,0,0,.40);
+    }
+    *{box-sizing:border-box}
+    body {
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; color:var(--text);
+      background:
+        radial-gradient(900px 550px at 20% -10%, rgba(45,125,255,.25), transparent 60%),
+        radial-gradient(850px 500px at 90% 0%, rgba(25,195,125,.18), transparent 58%),
+        linear-gradient(180deg,var(--bg),var(--bg2));
+      min-height:100vh;
+    }
+    .wrap{max-width:1180px;margin:0 auto;padding:22px 16px 60px}
+    header{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:58px;height:58px;border-radius:18px;background:linear-gradient(135deg,#2d7dff,#19c37d);display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:var(--shadow)}
+    h1{margin:0;font-size:30px;line-height:1.05}
+    .sub{color:var(--muted);font-size:14px;margin-top:4px}
+    a.btn,button{border:0;border-radius:16px;padding:11px 14px;font-weight:900;color:white;background:var(--accent);text-decoration:none;cursor:pointer;display:inline-flex;gap:8px;align-items:center;justify-content:center}
+    .ghost{background:rgba(255,255,255,.07)!important;border:1px solid var(--stroke)!important}
+    .card{background:linear-gradient(145deg,rgba(22,36,64,.92),rgba(8,14,28,.92));border:1px solid var(--stroke);border-radius:24px;padding:18px;box-shadow:var(--shadow);margin-bottom:18px}
+    .filters{display:grid;grid-template-columns:1fr 180px 180px;gap:10px}
+    input,select{width:100%;padding:12px;border-radius:14px;border:1px solid var(--stroke);background:rgba(0,0,0,.25);color:var(--text);outline:none}
+    select option{background:#0b1220;color:white}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+    .item{background:rgba(0,0,0,.22);border:1px solid var(--stroke);border-radius:22px;overflow:hidden;box-shadow:0 12px 28px rgba(0,0,0,.25)}
+    .item img{width:100%;height:210px;object-fit:cover;display:block;background:#050912;cursor:pointer}
+    .body{padding:14px}
+    .badge{display:inline-flex;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);font-size:12px;font-weight:900;color:#dce7ff;margin-bottom:8px}
+    .title{font-size:17px;font-weight:980;margin:0 0 6px}
+    .desc{font-size:13px;color:var(--muted);line-height:1.45;white-space:pre-wrap;margin:0 0 10px}
+    .meta{font-size:12px;color:#8fa0ca;margin-bottom:10px}
+    .row{display:flex;gap:8px;flex-wrap:wrap}
+    .empty{text-align:center;color:var(--muted);padding:40px 10px}
+    .errorBox{text-align:center;color:#ff8b8d;padding:20px;border:1px solid rgba(255,77,79,.35);background:rgba(255,77,79,.10);border-radius:18px;margin-top:20px}
+    .viewer{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99;display:none;align-items:center;justify-content:center;padding:16px;flex-direction:column;gap:12px}
+    .viewer img{max-width:96vw;max-height:82vh;border-radius:18px;object-fit:contain}
+    .viewer button{align-self:flex-end;background:rgba(255,255,255,.12)}
+    @media(max-width:760px){.filters{grid-template-columns:1fr} h1{font-size:25px}}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <header><div class="brand"><div class="logo">🖼️</div><div><h1>Archivio Segnala Facile</h1><div class="sub">Archivio indipendente foto, luoghi e segnalazioni</div></div></div><div class="row"><a class="btn ghost" href="admin.html">🔐 Admin</a><a class="btn ghost" href="https://vocicassino.github.io/segnalafacile/">↩️ App Segnala Facile</a></div></header>
-    <div class="card"><div class="filters"><input id="searchInput" type="text" placeholder="Cerca per titolo, categoria o descrizione..." /><select id="tipoFilter"><option value="all">Tutti i tipi</option><option value="segnalazione">Segnalazioni</option><option value="luogo">Luoghi</option><option value="altro">Altro</option></select><select id="categoriaFilter"><option value="all">Tutte le categorie</option></select></div></div>
-    <div id="status" class="empty">Caricamento archivio...</div><div id="grid" class="grid"></div>
+    <header>
+      <div class="brand">
+        <div class="logo">🖼️</div>
+        <div>
+          <h1>Archivio Segnala Facile</h1>
+          <div class="sub">Archivio indipendente foto, luoghi e segnalazioni</div>
+        </div>
+      </div>
+      <div class="row">
+        <a class="btn ghost" href="admin.html">🔐 Admin</a>
+        <a class="btn ghost" href="https://vocicassino.github.io/segnalafacile/">↩️ App Segnala Facile</a>
+      </div>
+    </header>
+
+    <div class="card">
+      <div class="filters">
+        <input id="searchInput" type="text" placeholder="Cerca per titolo, categoria o descrizione..." />
+        <select id="tipoFilter">
+          <option value="all">Tutti i tipi</option>
+          <option value="segnalazione">Segnalazioni</option>
+          <option value="luogo">Luoghi</option>
+          <option value="altro">Altro</option>
+        </select>
+        <select id="categoriaFilter">
+          <option value="all">Tutte le categorie</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="status" class="empty">Caricamento archivio...</div>
+    <div id="grid" class="grid"></div>
   </div>
-  <div class="viewer" id="viewer"><button onclick="closeViewer()">✕ Chiudi</button><img id="viewerImg" src="" alt="Foto archivio"></div>
+
+  <div class="viewer" id="viewer">
+    <button onclick="closeViewer()">✕ Chiudi</button>
+    <img id="viewerImg" src="" alt="Foto archivio">
+  </div>
+
 <script>
 const SUPABASE_URL = "https://nyxhwaqqywokusbnirj.supabase.co";
 const SUPABASE_KEY = "sb_publishable_ivK812cY6bRYfHm2fKWeQQ_afyVoj2Z";
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let records = [];
-function esc(s){return String(s ?? "").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));}
-function mapsUrl(lat,lng){const a=Number(lat),b=Number(lng); if(!Number.isFinite(a)||!Number.isFinite(b)||(a===0&&b===0)) return ""; return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(a+","+b)}`;}
-function openViewer(src){document.getElementById("viewerImg").src=src;document.getElementById("viewer").style.display="flex";} function closeViewer(){document.getElementById("viewer").style.display="none";document.getElementById("viewerImg").src="";}
-async function loadArchivio(){const status=document.getElementById("status"); const {data,error}=await supabase.from("archivio_foto").select("*").eq("visibile",true).order("created_at",{ascending:false}); if(error){status.textContent="Errore caricamento archivio: "+error.message;return;} records=data||[]; buildCategoryFilter(); render();}
-function buildCategoryFilter(){const sel=document.getElementById("categoriaFilter"); const cats=[...new Set(records.map(r=>(r.categoria||"").trim()).filter(Boolean))].sort(); sel.innerHTML='<option value="all">Tutte le categorie</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");}
-function render(){const q=document.getElementById("searchInput").value.toLowerCase().trim(); const tipo=document.getElementById("tipoFilter").value; const cat=document.getElementById("categoriaFilter").value; let list=records.filter(r=>{const hay=`${r.titolo||""} ${r.categoria||""} ${r.descrizione||""} ${r.tipo||""}`.toLowerCase(); if(q&&!hay.includes(q)) return false; if(tipo!=="all"&&r.tipo!==tipo) return false; if(cat!=="all"&&r.categoria!==cat) return false; return true;}); const status=document.getElementById("status"),grid=document.getElementById("grid"); status.style.display=list.length?"none":"block"; status.textContent=records.length?"Nessun risultato con questi filtri.":"Archivio ancora vuoto."; grid.innerHTML=list.map(r=>{const map=mapsUrl(r.lat,r.lng); return `<article class="item"><img src="${esc(r.foto_url)}" alt="${esc(r.titolo)}" loading="lazy" onclick="openViewer('${esc(r.foto_url)}')"><div class="body"><div class="badge">${esc(r.tipo||"archivio")} • ${esc(r.categoria||"senza categoria")}</div><h3 class="title">${esc(r.titolo)}</h3><div class="meta">${esc(r.data_evento||new Date(r.created_at).toLocaleString("it-IT"))}</div><p class="desc">${esc(r.descrizione||"")}</p><div class="row"><a class="btn ghost" href="${esc(r.foto_url)}" target="_blank" rel="noreferrer">🔎 Apri foto</a>${map?`<a class="btn ghost" href="${map}" target="_blank" rel="noreferrer">🧭 Raggiungi</a>`:""}</div></div></article>`;}).join("");}
-document.getElementById("searchInput").addEventListener("input",render);document.getElementById("tipoFilter").addEventListener("change",render);document.getElementById("categoriaFilter").addEventListener("change",render);loadArchivio();
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+}
+
+function mapsUrl(lat,lng) {
+  const a = Number(lat), b = Number(lng);
+  if (!Number.isFinite(a) || !Number.isFinite(b) || (a === 0 && b === 0)) return "";
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(a + "," + b)}`;
+}
+
+function openViewer(src) {
+  document.getElementById("viewerImg").src = src;
+  document.getElementById("viewer").style.display = "flex";
+}
+
+function closeViewer() {
+  document.getElementById("viewer").style.display = "none";
+  document.getElementById("viewerImg").src = "";
+}
+
+async function supabaseRest(path) {
+  const url = SUPABASE_URL.replace(/\/$/, "") + path;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "apikey": SUPABASE_KEY,
+      "Authorization": "Bearer " + SUPABASE_KEY,
+      "Accept": "application/json"
+    }
+  });
+  const txt = await res.text();
+  if (!res.ok) {
+    throw new Error("HTTP " + res.status + " - " + txt);
+  }
+  return txt ? JSON.parse(txt) : [];
+}
+
+async function loadArchivio() {
+  const status = document.getElementById("status");
+  const grid = document.getElementById("grid");
+
+  try {
+    status.className = "empty";
+    status.style.display = "block";
+    status.textContent = "Caricamento archivio...";
+
+    records = await supabaseRest("/rest/v1/archivio_foto?select=*&visibile=eq.true&order=created_at.desc");
+
+    buildCategoryFilter();
+    render();
+  } catch (e) {
+    console.error(e);
+    grid.innerHTML = "";
+    status.className = "errorBox";
+    status.style.display = "block";
+    status.innerHTML = "Errore caricamento archivio:<br><b>" + esc(e.message || e) + "</b><br><br>Controlla policy SELECT della tabella archivio_foto.";
+  }
+}
+
+function buildCategoryFilter() {
+  const sel = document.getElementById("categoriaFilter");
+  const cats = [...new Set(records.map(r => (r.categoria || "").trim()).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="all">Tutte le categorie</option>' + cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
+}
+
+function render() {
+  const q = document.getElementById("searchInput").value.toLowerCase().trim();
+  const tipo = document.getElementById("tipoFilter").value;
+  const cat = document.getElementById("categoriaFilter").value;
+
+  let list = records.filter(r => {
+    const hay = `${r.titolo||""} ${r.categoria||""} ${r.descrizione||""} ${r.tipo||""}`.toLowerCase();
+    if (q && !hay.includes(q)) return false;
+    if (tipo !== "all" && r.tipo !== tipo) return false;
+    if (cat !== "all" && r.categoria !== cat) return false;
+    return true;
+  });
+
+  const status = document.getElementById("status");
+  const grid = document.getElementById("grid");
+
+  status.className = "empty";
+  status.style.display = list.length ? "none" : "block";
+  status.textContent = records.length ? "Nessun risultato con questi filtri." : "Archivio ancora vuoto.";
+
+  grid.innerHTML = list.map(r => {
+    const map = mapsUrl(r.lat, r.lng);
+    return `
+      <article class="item">
+        <img src="${esc(r.foto_url)}" alt="${esc(r.titolo)}" loading="lazy" onclick="openViewer('${esc(r.foto_url)}')">
+        <div class="body">
+          <div class="badge">${esc(r.tipo || "archivio")} • ${esc(r.categoria || "senza categoria")}</div>
+          <h3 class="title">${esc(r.titolo)}</h3>
+          <div class="meta">${esc(r.data_evento || new Date(r.created_at).toLocaleString("it-IT"))}</div>
+          <p class="desc">${esc(r.descrizione || "")}</p>
+          <div class="row">
+            <a class="btn ghost" href="${esc(r.foto_url)}" target="_blank" rel="noreferrer">🔎 Apri foto</a>
+            ${map ? `<a class="btn ghost" href="${map}" target="_blank" rel="noreferrer">🧭 Raggiungi</a>` : ""}
+          </div>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("searchInput").addEventListener("input", render);
+  document.getElementById("tipoFilter").addEventListener("change", render);
+  document.getElementById("categoriaFilter").addEventListener("change", render);
+  loadArchivio();
+});
 </script>
 </body>
 </html>
