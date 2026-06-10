@@ -1,11 +1,388 @@
 <!doctype html>
-<html lang="it"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/><meta name="theme-color" content="#0b1220"/><title>Admin Archivio Segnala Facile</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>:root{--bg:#0b1220;--bg2:#070c18;--card:#162440;--text:#eaf0ff;--muted:#a9b6db;--accent:#2d7dff;--green:#19c37d;--danger:#ff4d4f;--stroke:rgba(255,255,255,.12)}*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--text);min-height:100vh;padding:20px}.wrap{max-width:980px;margin:0 auto}.card{background:var(--card);border:1px solid var(--stroke);border-radius:20px;padding:18px;margin-bottom:18px;box-shadow:0 16px 40px rgba(0,0,0,.35)}h1,h2{margin-top:0}label{display:block;color:var(--muted);font-size:12px;font-weight:800;margin:12px 0 6px}input,select,textarea{width:100%;padding:12px;border-radius:12px;border:1px solid var(--stroke);background:#070c18;color:white;outline:none}textarea{min-height:100px;resize:vertical}button,.btn{border:0;border-radius:14px;padding:11px 14px;font-weight:900;color:white;background:var(--accent);text-decoration:none;cursor:pointer;display:inline-flex;gap:8px;align-items:center;justify-content:center}.danger{background:var(--danger)}.success{background:var(--green)}.ghost{background:rgba(255,255,255,.07);border:1px solid var(--stroke)}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.preview{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:12px}.preview img{width:100%;height:120px;object-fit:cover;border-radius:12px;border:1px solid var(--stroke)}.item{background:#070c18;border:1px solid var(--stroke);border-radius:16px;padding:12px;margin-bottom:10px;display:grid;grid-template-columns:86px 1fr auto;gap:12px;align-items:center}.item img{width:86px;height:86px;object-fit:cover;border-radius:12px}.muted{color:var(--muted);font-size:13px}#dashboard{display:none}.ok{color:var(--green)}.err{color:var(--danger)}@media(max-width:760px){.grid{grid-template-columns:1fr}.item{grid-template-columns:1fr}.item img{width:100%;height:180px}}</style></head><body><div class="wrap"><div class="card" id="loginBox"><h1>🔐 Admin Archivio</h1><p class="muted">Accesso locale per gestire l’archivio indipendente Segnala Facile.</p><label>PIN admin</label><input id="pin" type="password" placeholder="Inserisci PIN"><div class="row" style="margin-top:12px"><button onclick="login()">Accedi</button><a class="btn ghost" href="index.html">Vai all'archivio pubblico</a></div><p class="muted">PIN iniziale: <b>2026</b>. Dopo il test lo cambiamo.</p></div><div id="dashboard"><div class="card"><div class="row" style="justify-content:space-between"><h1 style="margin:0">📂 Gestione Archivio</h1><div class="row"><a class="btn ghost" href="index.html">Archivio pubblico</a><button class="ghost" onclick="loadRecords()">🔄 Aggiorna</button></div></div></div><div class="card"><h2>➕ Nuova scheda archivio</h2><div class="grid"><div><label>Tipo</label><select id="tipo"><option value="segnalazione">Segnalazione</option><option value="luogo">Luogo</option><option value="altro">Altro</option></select></div><div><label>Categoria</label><input id="categoria" type="text" placeholder="Es. rifiuti, strade, ristorante..."></div></div><label>Titolo</label><input id="titolo" type="text" placeholder="Titolo della scheda"><label>Descrizione</label><textarea id="descrizione" placeholder="Descrizione o nota archivio"></textarea><div class="grid"><div><label>Latitudine</label><input id="lat" type="text" placeholder="Es. 41.492"></div><div><label>Longitudine</label><input id="lng" type="text" placeholder="Es. 13.831"></div></div><label>Foto da caricare</label><input id="fotoInput" type="file" accept="image/*" multiple><div class="preview" id="preview"></div><div class="row" style="margin-top:14px"><button class="success" id="btnUpload" onclick="uploadRecords()">✅ Pubblica nell'archivio</button><button class="ghost" onclick="clearForm()">🧹 Pulisci</button></div><div id="uploadStatus" class="muted" style="margin-top:10px"></div></div><div class="card"><h2>Archivio caricato</h2><div id="list" class="muted">Caricamento...</div></div></div></div><script>
-const SUPABASE_URL="https://nyxhwaqqywokusbnirj.supabase.co";const SUPABASE_KEY="sb_publishable_ivK812cY6bRYfHm2fKWeQQ_afyVoj2Z";const BUCKET="archivio-foto";const ADMIN_PIN="2026";const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);let selectedFiles=[];
-function login(){const pin=document.getElementById("pin").value.trim();if(pin!==ADMIN_PIN)return alert("PIN errato.");document.getElementById("loginBox").style.display="none";document.getElementById("dashboard").style.display="block";loadRecords()}function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-document.getElementById("fotoInput").addEventListener("change",async e=>{selectedFiles=Array.from(e.target.files||[]).slice(0,10);const box=document.getElementById("preview");box.innerHTML="";for(const f of selectedFiles){const dataUrl=await filePreview(f);box.innerHTML+=`<img src="${dataUrl}" alt="preview">`}});function filePreview(file){return new Promise(resolve=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.readAsDataURL(file)})}
-function resizeFileToBlob(file,maxSize=1400,quality=.82){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=reject;reader.onload=()=>{const img=new Image();img.onerror=reject;img.onload=()=>{let w=img.width,h=img.height;if(w>h&&w>maxSize){h=Math.round(h*maxSize/w);w=maxSize}else if(h>=w&&h>maxSize){w=Math.round(w*maxSize/h);h=maxSize}const c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);c.toBlob(blob=>resolve(blob),"image/jpeg",quality)};img.src=reader.result};reader.readAsDataURL(file)})}
-async function uploadRecords(){const btn=document.getElementById("btnUpload"),status=document.getElementById("uploadStatus");const titolo=document.getElementById("titolo").value.trim(),descrizione=document.getElementById("descrizione").value.trim(),categoria=document.getElementById("categoria").value.trim(),tipo=document.getElementById("tipo").value;const latRaw=document.getElementById("lat").value.trim(),lngRaw=document.getElementById("lng").value.trim();const lat=latRaw?Number(latRaw.replace(",",".")):null,lng=lngRaw?Number(lngRaw.replace(",",".")):null;if(!titolo)return alert("Inserisci il titolo.");if(!selectedFiles.length)return alert("Scegli almeno una foto.");btn.disabled=true;status.innerHTML="Caricamento in corso...";try{let count=0;for(const file of selectedFiles){const blob=await resizeFileToBlob(file);const safeName=(file.name||"foto.jpg").toLowerCase().replace(/[^a-z0-9.]+/g,"-");const now=new Date();const path=`${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,"0")}/${crypto.randomUUID()}-${safeName.replace(/\.\w+$/,"")}.jpg`;const upload=await supabase.storage.from(BUCKET).upload(path,blob,{contentType:"image/jpeg",cacheControl:"3600",upsert:false});if(upload.error)throw upload.error;const publicUrl=supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;const insert=await supabase.from("archivio_foto").insert({tipo,titolo,categoria,descrizione,data_evento:new Date().toLocaleString("it-IT"),lat:Number.isFinite(lat)?lat:null,lng:Number.isFinite(lng)?lng:null,foto_url:publicUrl,file_path:path,fonte:"Archivio Segnala Facile",visibile:true});if(insert.error)throw insert.error;count++;status.innerHTML=`Caricate ${count} foto su ${selectedFiles.length}...`}status.innerHTML='<span class="ok">✅ Pubblicazione completata.</span>';clearForm(false);loadRecords()}catch(e){console.error(e);status.innerHTML=`<span class="err">Errore: ${esc(e.message||e)}</span>`}finally{btn.disabled=false}}
-function clearForm(clearStatus=true){document.getElementById("titolo").value="";document.getElementById("descrizione").value="";document.getElementById("categoria").value="";document.getElementById("lat").value="";document.getElementById("lng").value="";document.getElementById("fotoInput").value="";document.getElementById("preview").innerHTML="";selectedFiles=[];if(clearStatus)document.getElementById("uploadStatus").innerHTML=""}
-async function loadRecords(){const list=document.getElementById("list");list.textContent="Caricamento...";const {data,error}=await supabase.from("archivio_foto").select("*").order("created_at",{ascending:false}).limit(50);if(error){list.textContent="Errore: "+error.message;return}if(!data||!data.length){list.textContent="Archivio vuoto.";return}list.innerHTML=data.map(r=>`<div class="item"><img src="${esc(r.foto_url)}" alt="${esc(r.titolo)}"><div><b>${esc(r.titolo)}</b><div class="muted">${esc(r.tipo)} • ${esc(r.categoria)} • ${esc(r.data_evento||"")}</div><div class="muted">${esc(r.descrizione||"")}</div></div><div class="row"><button class="ghost" onclick="toggleVisible('${r.id}',${r.visibile?"false":"true"})">${r.visibile?"Nascondi":"Mostra"}</button><button class="danger" onclick="deleteRecord('${r.id}','${esc(r.file_path||"")}')">Elimina</button></div></div>`).join("")}
-async function toggleVisible(id,value){const {error}=await supabase.from("archivio_foto").update({visibile:value}).eq("id",id);if(error)alert(error.message);loadRecords()}async function deleteRecord(id,path){if(!confirm("Eliminare definitivamente questa foto dall'archivio?"))return;if(path)await supabase.storage.from(BUCKET).remove([path]);const {error}=await supabase.from("archivio_foto").delete().eq("id",id);if(error)alert(error.message);loadRecords()}
-</script></body></html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1220" />
+  <title>Admin Archivio Segnala Facile</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg:#0b1220; --bg2:#070c18; --card:#162440; --text:#eaf0ff; --muted:#a9b6db;
+      --accent:#2d7dff; --green:#19c37d; --danger:#ff4d4f; --stroke:rgba(255,255,255,.12);
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      background:linear-gradient(180deg,var(--bg),var(--bg2)); color:var(--text);
+      min-height:100vh; padding:20px;
+    }
+    .wrap { max-width:980px; margin:0 auto; }
+    .card { background:var(--card); border:1px solid var(--stroke); border-radius:20px; padding:18px; margin-bottom:18px; box-shadow:0 16px 40px rgba(0,0,0,.35); }
+    h1,h2 { margin-top:0; }
+    label { display:block; color:var(--muted); font-size:12px; font-weight:800; margin:12px 0 6px; }
+    input,select,textarea { width:100%; padding:12px; border-radius:12px; border:1px solid var(--stroke); background:#070c18; color:white; outline:none; }
+    textarea { min-height:100px; resize:vertical; }
+    button,.btn { border:0; border-radius:14px; padding:11px 14px; font-weight:900; color:white; background:var(--accent); text-decoration:none; cursor:pointer; display:inline-flex; gap:8px; align-items:center; justify-content:center; }
+    button:disabled { opacity:.65; cursor:not-allowed; }
+    .danger { background:var(--danger); }
+    .success { background:var(--green); }
+    .ghost { background:rgba(255,255,255,.07); border:1px solid var(--stroke); }
+    .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+    .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .preview { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:10px; margin-top:12px; }
+    .preview img { width:100%; height:120px; object-fit:cover; border-radius:12px; border:1px solid var(--stroke); }
+    .item { background:#070c18; border:1px solid var(--stroke); border-radius:16px; padding:12px; margin-bottom:10px; display:grid; grid-template-columns:86px 1fr auto; gap:12px; align-items:center; }
+    .item img { width:86px; height:86px; object-fit:cover; border-radius:12px; }
+    .muted { color:var(--muted); font-size:13px; }
+    #dashboard { display:none; }
+    .ok { color:var(--green); }
+    .err { color:var(--danger); }
+    .statusbox { margin-top:12px; padding:10px 12px; border-radius:14px; background:rgba(0,0,0,.22); border:1px solid var(--stroke); }
+    @media(max-width:760px) {
+      .grid { grid-template-columns:1fr; }
+      .item { grid-template-columns:1fr; }
+      .item img { width:100%; height:180px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card" id="loginBox">
+    <h1>🔐 Admin Archivio</h1>
+    <p class="muted">Accesso locale per gestire l’archivio indipendente Segnala Facile.</p>
+    <label>PIN admin</label>
+    <input id="pin" type="password" placeholder="Inserisci PIN" autocomplete="current-password">
+    <div class="row" style="margin-top:12px">
+      <button id="btnLogin" type="button">Accedi</button>
+      <a class="btn ghost" href="index.html">Vai all'archivio pubblico</a>
+    </div>
+    <div id="loginMsg" class="statusbox muted">PIN iniziale: <b>2026</b>. Dopo il test lo cambiamo.</div>
+  </div>
+
+  <div id="dashboard">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <h1 style="margin:0">📂 Gestione Archivio</h1>
+        <div class="row">
+          <a class="btn ghost" href="index.html">Archivio pubblico</a>
+          <button class="ghost" id="btnRefresh" type="button">🔄 Aggiorna</button>
+        </div>
+      </div>
+      <div id="connectionStatus" class="statusbox muted">Controllo collegamento Supabase...</div>
+    </div>
+
+    <div class="card">
+      <h2>➕ Nuova scheda archivio</h2>
+      <div class="grid">
+        <div>
+          <label>Tipo</label>
+          <select id="tipo">
+            <option value="segnalazione">Segnalazione</option>
+            <option value="luogo">Luogo</option>
+            <option value="altro">Altro</option>
+          </select>
+        </div>
+        <div>
+          <label>Categoria</label>
+          <input id="categoria" type="text" placeholder="Es. rifiuti, strade, ristorante...">
+        </div>
+      </div>
+
+      <label>Titolo</label>
+      <input id="titolo" type="text" placeholder="Titolo della scheda">
+
+      <label>Descrizione</label>
+      <textarea id="descrizione" placeholder="Descrizione o nota archivio"></textarea>
+
+      <div class="grid">
+        <div>
+          <label>Latitudine</label>
+          <input id="lat" type="text" placeholder="Es. 41.492">
+        </div>
+        <div>
+          <label>Longitudine</label>
+          <input id="lng" type="text" placeholder="Es. 13.831">
+        </div>
+      </div>
+
+      <label>Foto da caricare</label>
+      <input id="fotoInput" type="file" accept="image/*" multiple>
+      <div class="preview" id="preview"></div>
+
+      <div class="row" style="margin-top:14px">
+        <button class="success" id="btnUpload" type="button">✅ Pubblica nell'archivio</button>
+        <button class="ghost" id="btnClear" type="button">🧹 Pulisci</button>
+      </div>
+      <div id="uploadStatus" class="statusbox muted">Pronto.</div>
+    </div>
+
+    <div class="card">
+      <h2>Archivio caricato</h2>
+      <div id="list" class="muted">Caricamento...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://nyxhwaqqywokusbnirj.supabase.co";
+const SUPABASE_KEY = "sb_publishable_ivK812cY6bRYfHm2fKWeQQ_afyVoj2Z";
+const BUCKET = "archivio-foto";
+const ADMIN_PIN = "2026";
+
+let supabaseClient = null;
+let selectedFiles = [];
+
+function setText(id, html) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = html;
+}
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+}
+
+function getSupabaseClient() {
+  if (supabaseClient) return supabaseClient;
+
+  if (!window.supabase || !window.supabase.createClient) {
+    throw new Error("Libreria Supabase non caricata. Controlla la connessione internet o il blocco del browser.");
+  }
+
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  return supabaseClient;
+}
+
+function login() {
+  const pin = document.getElementById("pin").value.trim();
+  const loginMsg = document.getElementById("loginMsg");
+
+  if (pin !== ADMIN_PIN) {
+    loginMsg.innerHTML = '<span class="err">PIN errato.</span>';
+    return;
+  }
+
+  document.getElementById("loginBox").style.display = "none";
+  document.getElementById("dashboard").style.display = "block";
+
+  try {
+    getSupabaseClient();
+    setText("connectionStatus", '<span class="ok">✅ Supabase collegato. Puoi caricare le foto.</span>');
+    loadRecords();
+  } catch (e) {
+    console.error(e);
+    setText("connectionStatus", '<span class="err">Errore collegamento: ' + esc(e.message) + '</span>');
+  }
+}
+
+async function loadRecords() {
+  const list = document.getElementById("list");
+  list.textContent = "Caricamento...";
+
+  try {
+    const sb = getSupabaseClient();
+    const { data, error } = await sb
+      .from("archivio_foto")
+      .select("*")
+      .order("created_at", { ascending:false })
+      .limit(50);
+
+    if (error) throw error;
+
+    if (!data || !data.length) {
+      list.textContent = "Archivio vuoto.";
+      return;
+    }
+
+    list.innerHTML = data.map(r => `
+      <div class="item">
+        <img src="${esc(r.foto_url)}" alt="${esc(r.titolo)}">
+        <div>
+          <b>${esc(r.titolo)}</b>
+          <div class="muted">${esc(r.tipo)} • ${esc(r.categoria)} • ${esc(r.data_evento || "")}</div>
+          <div class="muted">${esc(r.descrizione || "")}</div>
+        </div>
+        <div class="row">
+          <button class="ghost" type="button" onclick="toggleVisible('${r.id}', ${r.visibile ? "false" : "true"})">${r.visibile ? "Nascondi" : "Mostra"}</button>
+          <button class="danger" type="button" onclick="deleteRecord('${r.id}','${esc(r.file_path || "")}')">Elimina</button>
+        </div>
+      </div>
+    `).join("");
+  } catch (e) {
+    console.error(e);
+    list.innerHTML = '<span class="err">Errore caricamento: ' + esc(e.message || e) + '</span>';
+  }
+}
+
+function filePreview(file) {
+  return new Promise(resolve => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.readAsDataURL(file);
+  });
+}
+
+async function handleFileChange(e) {
+  selectedFiles = Array.from(e.target.files || []).slice(0, 10);
+  const box = document.getElementById("preview");
+  box.innerHTML = "";
+
+  for (const f of selectedFiles) {
+    const dataUrl = await filePreview(f);
+    box.innerHTML += `<img src="${dataUrl}" alt="preview">`;
+  }
+}
+
+function resizeFileToBlob(file, maxSize = 1400, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        let w = img.width;
+        let h = img.height;
+
+        if (w > h && w > maxSize) {
+          h = Math.round(h * maxSize / w);
+          w = maxSize;
+        } else if (h >= w && h > maxSize) {
+          w = Math.round(w * maxSize / h);
+          h = maxSize;
+        }
+
+        const c = document.createElement("canvas");
+        c.width = w;
+        c.height = h;
+        c.getContext("2d").drawImage(img, 0, 0, w, h);
+
+        c.toBlob(blob => {
+          if (!blob) reject(new Error("Errore compressione immagine."));
+          else resolve(blob);
+        }, "image/jpeg", quality);
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadRecords() {
+  const btn = document.getElementById("btnUpload");
+  const status = document.getElementById("uploadStatus");
+  const titolo = document.getElementById("titolo").value.trim();
+  const descrizione = document.getElementById("descrizione").value.trim();
+  const categoria = document.getElementById("categoria").value.trim();
+  const tipo = document.getElementById("tipo").value;
+  const latRaw = document.getElementById("lat").value.trim();
+  const lngRaw = document.getElementById("lng").value.trim();
+  const lat = latRaw ? Number(latRaw.replace(",", ".")) : null;
+  const lng = lngRaw ? Number(lngRaw.replace(",", ".")) : null;
+
+  if (!titolo) return alert("Inserisci il titolo.");
+  if (!selectedFiles.length) return alert("Scegli almeno una foto.");
+
+  btn.disabled = true;
+  status.innerHTML = "Caricamento in corso...";
+
+  try {
+    const sb = getSupabaseClient();
+    let count = 0;
+
+    for (const file of selectedFiles) {
+      const blob = await resizeFileToBlob(file);
+      const safeName = (file.name || "foto.jpg").toLowerCase().replace(/[^a-z0-9.]+/g, "-");
+      const now = new Date();
+      const path = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,"0")}/${crypto.randomUUID()}-${safeName.replace(/\.\w+$/, "")}.jpg`;
+
+      const upload = await sb.storage.from(BUCKET).upload(path, blob, {
+        contentType: "image/jpeg",
+        cacheControl: "3600",
+        upsert: false
+      });
+      if (upload.error) throw upload.error;
+
+      const publicUrl = sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+
+      const insert = await sb.from("archivio_foto").insert({
+        tipo,
+        titolo,
+        categoria,
+        descrizione,
+        data_evento: new Date().toLocaleString("it-IT"),
+        lat: Number.isFinite(lat) ? lat : null,
+        lng: Number.isFinite(lng) ? lng : null,
+        foto_url: publicUrl,
+        file_path: path,
+        fonte: "Archivio Segnala Facile",
+        visibile: true
+      });
+
+      if (insert.error) throw insert.error;
+
+      count++;
+      status.innerHTML = `Caricate ${count} foto su ${selectedFiles.length}...`;
+    }
+
+    status.innerHTML = '<span class="ok">✅ Pubblicazione completata.</span>';
+    clearForm(false);
+    loadRecords();
+  } catch (e) {
+    console.error(e);
+    status.innerHTML = '<span class="err">Errore: ' + esc(e.message || e) + '</span>';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function clearForm(clearStatus = true) {
+  document.getElementById("titolo").value = "";
+  document.getElementById("descrizione").value = "";
+  document.getElementById("categoria").value = "";
+  document.getElementById("lat").value = "";
+  document.getElementById("lng").value = "";
+  document.getElementById("fotoInput").value = "";
+  document.getElementById("preview").innerHTML = "";
+  selectedFiles = [];
+  if (clearStatus) document.getElementById("uploadStatus").innerHTML = "Pronto.";
+}
+
+async function toggleVisible(id, value) {
+  try {
+    const sb = getSupabaseClient();
+    const { error } = await sb.from("archivio_foto").update({ visibile: value }).eq("id", id);
+    if (error) throw error;
+    loadRecords();
+  } catch (e) {
+    alert(e.message || e);
+  }
+}
+
+async function deleteRecord(id, path) {
+  if (!confirm("Eliminare definitivamente questa foto dall'archivio?")) return;
+
+  try {
+    const sb = getSupabaseClient();
+    if (path) await sb.storage.from(BUCKET).remove([path]);
+    const { error } = await sb.from("archivio_foto").delete().eq("id", id);
+    if (error) throw error;
+    loadRecords();
+  } catch (e) {
+    alert(e.message || e);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("btnLogin").addEventListener("click", login);
+  document.getElementById("pin").addEventListener("keydown", e => {
+    if (e.key === "Enter") login();
+  });
+  document.getElementById("btnRefresh").addEventListener("click", loadRecords);
+  document.getElementById("fotoInput").addEventListener("change", handleFileChange);
+  document.getElementById("btnUpload").addEventListener("click", uploadRecords);
+  document.getElementById("btnClear").addEventListener("click", () => clearForm(true));
+});
+</script>
+</body>
+</html>
