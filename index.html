@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#0b1220" />
   <title>Archivio Segnala Facile</title>
-  <link rel="manifest" href="manifest.webmanifest?v=3" />
+  <link rel="manifest" href="manifest.webmanifest?v=4" />
   <link rel="icon" href="icons/icon-192.png" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --bg:#0b1220; --bg2:#070c18; --card:#111d35; --text:#eaf0ff; --muted:#a9b6db;
@@ -44,7 +45,8 @@
     .meta{font-size:12px;color:#8fa0ca;margin-bottom:10px}
     .row{display:flex;gap:8px;flex-wrap:wrap}
     .empty{text-align:center;color:var(--muted);padding:40px 10px}
-    .errorBox{text-align:center;color:#ff8b8d;padding:20px;border:1px solid rgba(255,77,79,.35);background:rgba(255,77,79,.10);border-radius:18px;margin-top:20px}
+    .errorBox{text-align:center;color:#ffb3b4;padding:20px;border:1px solid rgba(255,77,79,.35);background:rgba(255,77,79,.10);border-radius:18px;margin-top:20px;line-height:1.5}
+    .debug{font-size:12px;color:#a9b6db;margin-top:12px;word-break:break-all}
     .viewer{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99;display:none;align-items:center;justify-content:center;padding:16px;flex-direction:column;gap:12px}
     .viewer img{max-width:96vw;max-height:82vh;border-radius:18px;object-fit:contain}
     .viewer button{align-self:flex-end;background:rgba(255,255,255,.12)}
@@ -64,6 +66,7 @@
       <div class="row">
         <a class="btn ghost" href="admin.html">🔐 Admin</a>
         <a class="btn ghost" href="https://vocicassino.github.io/segnalafacile/">↩️ App Segnala Facile</a>
+        <button class="ghost" type="button" onclick="loadArchivio()">🔄 Riprova</button>
       </div>
     </header>
 
@@ -95,6 +98,7 @@
 const SUPABASE_URL = "https://nyxhwaqqywokusbnirj.supabase.co";
 const SUPABASE_KEY = "sb_publishable_ivK812cY6bRYfHm2fKWeQQ_afyVoj2Z";
 let records = [];
+let sb = null;
 
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
@@ -116,20 +120,51 @@ function closeViewer() {
   document.getElementById("viewerImg").src = "";
 }
 
-async function supabaseRest(path) {
-  const url = SUPABASE_URL.replace(/\/$/, "") + path;
+function showError(msg, detail) {
+  const status = document.getElementById("status");
+  document.getElementById("grid").innerHTML = "";
+  status.className = "errorBox";
+  status.style.display = "block";
+  status.innerHTML = `
+    <b>${esc(msg)}</b>
+    <div class="debug">${esc(detail || "")}</div>
+    <div style="margin-top:14px">
+      <button type="button" onclick="loadArchivio()">🔄 Riprova</button>
+      <a class="btn ghost" href="admin.html">🔐 Apri Admin</a>
+    </div>
+  `;
+}
+
+async function readWithSupabaseJs() {
+  if (!window.supabase || !window.supabase.createClient) {
+    throw new Error("supabase-js non caricato");
+  }
+  if (!sb) sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const { data, error } = await sb
+    .from("archivio_foto")
+    .select("*")
+    .eq("visibile", true)
+    .order("created_at", { ascending:false });
+
+  if (error) throw error;
+  return data || [];
+}
+
+async function readWithRest() {
+  const url = SUPABASE_URL.replace(/\/$/, "") + "/rest/v1/archivio_foto?select=*&visibile=eq.true&order=created_at.desc";
   const res = await fetch(url, {
     method: "GET",
+    mode: "cors",
     headers: {
       "apikey": SUPABASE_KEY,
       "Authorization": "Bearer " + SUPABASE_KEY,
       "Accept": "application/json"
     }
   });
+
   const txt = await res.text();
-  if (!res.ok) {
-    throw new Error("HTTP " + res.status + " - " + txt);
-  }
+  if (!res.ok) throw new Error("HTTP " + res.status + " - " + txt);
   return txt ? JSON.parse(txt) : [];
 }
 
@@ -137,21 +172,33 @@ async function loadArchivio() {
   const status = document.getElementById("status");
   const grid = document.getElementById("grid");
 
+  status.className = "empty";
+  status.style.display = "block";
+  status.textContent = "Caricamento archivio...";
+  grid.innerHTML = "";
+
+  let err1 = null;
   try {
-    status.className = "empty";
-    status.style.display = "block";
-    status.textContent = "Caricamento archivio...";
-
-    records = await supabaseRest("/rest/v1/archivio_foto?select=*&visibile=eq.true&order=created_at.desc");
-
+    records = await readWithSupabaseJs();
     buildCategoryFilter();
     render();
+    return;
   } catch (e) {
-    console.error(e);
-    grid.innerHTML = "";
-    status.className = "errorBox";
-    status.style.display = "block";
-    status.innerHTML = "Errore caricamento archivio:<br><b>" + esc(e.message || e) + "</b><br><br>Controlla policy SELECT della tabella archivio_foto.";
+    err1 = e;
+    console.warn("supabase-js fallito, provo REST:", e);
+  }
+
+  try {
+    records = await readWithRest();
+    buildCategoryFilter();
+    render();
+    return;
+  } catch (e2) {
+    console.error("REST fallito:", e2);
+    showError(
+      "Errore caricamento archivio",
+      "Metodo 1: " + (err1?.message || err1) + " | Metodo 2: " + (e2?.message || e2) + " | URL: " + SUPABASE_URL
+    );
   }
 }
 
